@@ -1,14 +1,13 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import FoodPage from './components/FoodPage';
-import LoginPage from './components/LoginPage'
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import FoodPage from "./components/FoodPage";
+import AuthenticatePage from "./components/AuthenticatePage";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<FoodPage />} />
-        <Route path="/login" element={<LoginPage />} />
-       
+        <Route path="/" element={<AuthenticatePage />} />
+        <Route path="/foods" element={<FoodPage />} />
       </Routes>
     </BrowserRouter>
   );
