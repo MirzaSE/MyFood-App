@@ -3,7 +3,7 @@ import { Button, TextField, FormControl, Typography, Grid, Link } from '@mui/mat
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-
+import { registerUser, loginUser } from '../services/ApiService';
 interface UserLogin {
   username: string;
   password: string;
@@ -22,10 +22,14 @@ function RegistrationForm() {
     resolver: yupResolver(validationSchema),
   });
 
-  const onSubmit = (data: UserRegister) => {
-    // Handle form submission (send data to server)
-    console.log('Form data:', data);
-  };
+  const onSubmit = async (data: UserRegister) => {
+  try {
+    await registerUser(data);
+    alert('Registration successful! You can now log in.');
+  } catch (error) {
+    console.error('Registration failed', error);
+  }
+};
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -70,10 +74,14 @@ function Login() {
   const { register, handleSubmit, formState: { errors } } = useForm<UserLogin>();
 
   const onSubmit = async (data: UserLogin) => {
-    // Handle login logic with the submitted data (username and password)
-    // This example just logs the data to the console for demonstration.
-    console.log('Login data:', data);
-  };
+  try {
+    const result = await loginUser(data);
+    localStorage.setItem('token', result.token);
+    console.log('Login successful!', result);
+  } catch (error) {
+    console.error('Login failed', error);
+  }
+};
   // Implement your login form logic here (username, password fields, submit button)
   return (
 
