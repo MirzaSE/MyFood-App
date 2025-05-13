@@ -1,0 +1,18 @@
+.foodTable {
+    width: 80%; /* Set a fixed width or use responsive units */
+    border-collapse: collapse; /* Remove default table borders */
+    overflow-x: auto;
+  }
+  
+  .foodTable thead tr th {
+    background-color:#1976d2; /* Light background for header row */
+    font-weight: bold;
+    padding: 8px; /* Add some padding for readability */
+    border: 1px solid #dddddd; /* Add thin borders for separation */
+    text-align: left; /* Align content to the left */
+  }
+  
+  .foodTable tbody tr td {
+    padding: 8px; /* Add padding for data cells */
+    border: 1px solid #131212; /* Add thin borders */
+  }

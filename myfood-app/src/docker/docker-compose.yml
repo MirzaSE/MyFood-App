@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # SQL Server database
+  db:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    environment:
+      SA_PASSWORD: "Password1"    # change this password
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    volumes:
+      - dbdata:/var/opt/mssql
+
+  # .NET Core Web API
+  api:
+    build:
+      context: ./MyFood.Api      # path to your .NET project folder
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+    environment:
+      # match your appsettings.json connection string key
+      ConnectionStrings__DefaultConnection: "Server=localhost,1433;Database=MyFood_Database;User Id=sa;Password=Password1;"
+    ports:
+      - "7124:80"           # map container port 80 to host 5000
+
+  # React frontend
+  frontend:
+    build:
+      context:  ./myfood-app   # path to your React project folder
+      dockerfile: Dockerfile
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"          # serve React dev server on port 3000
+
+  # Migrations runner (one-off)
+  migrations:
+    build:
+      context: ./MyFood.Api     # reuses the same .NET API image
+      dockerfile: Dockerfile
+    command: dotnet ef database update --no-build
+    depends_on:
+      - db
+    environment:
+      ConnectionStrings__DefaultConnection: "Server=localhost,1433;Database=MyFood_Database;User Id=sa;Password=Password1;"
+
+volumes:
+  dbdata:
