@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Button, TextField, FormControl, Typography, Grid, Link } from '@mui/material';
 import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
+import { registerUser, loginUser } from '../services/ApiService';
 
 interface UserLogin {
-  username: string;
+  email: string;
   password: string;
 }
 interface UserRegister extends UserLogin {
@@ -14,33 +16,38 @@ interface UserRegister extends UserLogin {
 
 function RegistrationForm() {
   const validationSchema = yup.object({
-    username: yup.string().required('Username is required'),
+    email: yup.string().required('Email is required'),
     password: yup.string().required('Password is required').min(8, 'Password must be at least 8 characters'),
     confirmPassword: yup.string().oneOf([yup.ref('password')], 'Passwords must match').required('Confirm password is required'),
   });
+
   const { register, handleSubmit, formState: { errors } } = useForm<UserRegister>({
     resolver: yupResolver(validationSchema),
   });
 
-  const onSubmit = (data: UserRegister) => {
-    // Handle form submission (send data to server)
-    console.log('Form data:', data);
+  const onSubmit = async (data: UserRegister) => {
+    try {
+      await registerUser(data);
+      alert('Registration successful! You can now log in.');
+    } catch (error) {
+      console.error('Registration failed', error);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <FormControl fullWidth margin="normal">
         <TextField
-          {...register('username', { required: true })}
-          id="username"
-          label="Username"
-          error={!!errors.username}
-          helperText={errors.username?.message?.toString()}
+          {...register('email')}
+          id="email"
+          label="Email"
+          error={!!errors.email}
+          helperText={errors.email?.message?.toString()}
         />
       </FormControl>
       <FormControl fullWidth margin="normal">
         <TextField
-          {...register('password', { required: true })}
+          {...register('password')}
           id="password"
           label="Password"
           type="password"
@@ -50,7 +57,7 @@ function RegistrationForm() {
       </FormControl>
       <FormControl fullWidth margin="normal">
         <TextField
-          {...register('confirmPassword', { required: true })}
+          {...register('confirmPassword')}
           id="confirmPassword"
           label="Confirm Password"
           type="password"
@@ -61,31 +68,35 @@ function RegistrationForm() {
       <Button type="submit" sx={{ marginBottom: '10px' }} variant="contained">
         Register
       </Button>
-
     </form>
   );
 }
 
-function Login() {
+function Login({ setIsAuthenticated }: { setIsAuthenticated: (auth: boolean) => void }) {
   const { register, handleSubmit, formState: { errors } } = useForm<UserLogin>();
+  const navigate = useNavigate();
 
   const onSubmit = async (data: UserLogin) => {
-    // Handle login logic with the submitted data (username and password)
-    // This example just logs the data to the console for demonstration.
-    console.log('Login data:', data);
+    try {
+      const result = await loginUser(data);
+      localStorage.setItem('token', result.token);
+      setIsAuthenticated(true);
+      navigate('/');
+    } catch (error) {
+      console.error('Login failed', error);
+    }
   };
-  // Implement your login form logic here (username, password fields, submit button)
-  return (
 
+  return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <FormControl fullWidth margin="normal">
         <TextField
-          {...register('username', { required: true })}
-          id="username"
-          label="Username"
+          {...register('email', { required: true })}
+          id="email"
+          label="Email"
           className="login-input"
-          error={!!errors.username}
-          helperText={errors.username?.message?.toString() || ''}
+          error={!!errors.email}
+          helperText={errors.email?.message?.toString() || ''}
         />
       </FormControl>
       <FormControl fullWidth margin="normal">
@@ -103,18 +114,14 @@ function Login() {
         Login
       </Button>
     </form>
-
-
   );
 }
-function AuthPage() {
-  const [activeView, setActiveView] = useState('login'); // Initial view state
+
+function AuthPage({ setIsAuthenticated }: { setIsAuthenticated: (auth: boolean) => void }) {
+  const [activeView, setActiveView] = useState('login');
 
   const handleViewChange = (view: string) => {
     setActiveView(view);
-
-    if ('login')
-      console.log(view);
   };
 
   return (
@@ -130,13 +137,18 @@ function AuthPage() {
         <Typography variant="h5" color="primary" align="center">
           Food App
         </Typography>
-        {activeView === 'login' ? <Login /> : <RegistrationForm />} {/* Conditional rendering */}
+        {activeView === 'login' ? (
+          <Login setIsAuthenticated={setIsAuthenticated} />
+        ) : (
+          <RegistrationForm />
+        )}
       </Grid>
       <Grid item>
         <Link variant="body2" onClick={() => handleViewChange(activeView === 'login' ? 'register' : 'login')}>
-          {activeView === 'login' ? 'Still not using Food App: REGISTER' : 'I have an account: LOG IN'}
+          {activeView === 'login'
+            ? 'Your first time on Food App: REGISTER'
+            : 'You already have an account: LOG IN'}
         </Link>
-
       </Grid>
     </Grid>
   );

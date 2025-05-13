@@ -1,17 +1,35 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import AuthForms from './components/AuthForms';
 import FoodPage from './components/FoodPage';
-import LoginPage from './components/LoginPage'
 
-function App() {
+const App: React.FC = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
+
+  useEffect(() => {
+    const handleStorage = () => {
+      setIsAuthenticated(!!localStorage.getItem('token'));
+    };
+
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
   return (
-    <BrowserRouter>
+    <Router>
       <Routes>
-        <Route path="/" element={<FoodPage />} />
-        <Route path="/login" element={<LoginPage />} />
-       
+        <Route 
+          path="/authenticate" 
+          element={!isAuthenticated ? <AuthForms setIsAuthenticated={setIsAuthenticated} /> : <Navigate to="/" replace />} 
+        />
+        <Route 
+          path="/" 
+          element={isAuthenticated ? <FoodPage /> : <Navigate to="/authenticate" replace />} 
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </BrowserRouter>
+    </Router>
   );
-}
+};
 
 export default App;
