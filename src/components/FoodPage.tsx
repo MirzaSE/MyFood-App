@@ -11,6 +11,7 @@ import { Pagination, TableContainer  } from '@mui/material';
 import { getFoods, createFood } from '../services/ApiService'; // Assuming ApiService is in services folder
 import { useForm } from 'react-hook-form'; // Form validation library
 import styles from './FoodPage.module.css'
+import {useNavigate} from "react-router-dom";
 
 
 interface FoodItem {
@@ -62,7 +63,7 @@ function FoodPage() {
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentFoods = foods.slice(indexOfFirstItem, indexOfLastItem);
-
+  const navigate = useNavigate();
     // Form validation with React Hook Form
     const {
       register,
@@ -103,6 +104,9 @@ function FoodPage() {
       {error && <p style={{ color: 'red' }}>{error}</p>}
       {!isLoading && !error && (
         <>
+          <Button onClick={()=>{localStorage.removeItem("accessToken")
+          navigate("/login")
+          }}>Logout</Button>
         <Grid container spacing={2}> {/* Adjust spacing value as needed */}
   <Grid item xs={12}>
         <Button variant="contained" onClick={handleOpenAddFoodModal} color="primary" className="green-button">
