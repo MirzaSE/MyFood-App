@@ -29,7 +29,7 @@ function RegistrationForm() {
 
   const onSubmit = async (data: UserRegister) => {
       try{
-          registerUser(registerTransformToServerData(data))
+          await registerUser(registerTransformToServerData(data))
           navigate('/login')
       }
       catch (e){}
@@ -89,7 +89,7 @@ function Login() {
     const navigate = useNavigate();
   const onSubmit = async (data: UserLogin) => {
       try {
-          loginUser(data)
+          await loginUser(data)
           navigate('/')
       }
       catch (e){
