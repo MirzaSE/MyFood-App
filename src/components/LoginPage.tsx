@@ -3,6 +3,8 @@ import { Button, TextField, FormControl, Typography, Grid, Link } from '@mui/mat
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
+import { loginUser, registerUser } from '../services/ApiService';
+import { useNavigate } from 'react-router-dom';
 
 interface UserLogin {
   username: string;
@@ -13,6 +15,7 @@ interface UserRegister extends UserLogin {
 }
 
 function RegistrationForm() {
+  const navigate = useNavigate();
   const validationSchema = yup.object({
     username: yup.string().required('Username is required'),
     password: yup.string().required('Password is required').min(8, 'Password must be at least 8 characters'),
@@ -22,9 +25,15 @@ function RegistrationForm() {
     resolver: yupResolver(validationSchema),
   });
 
-  const onSubmit = (data: UserRegister) => {
+  const onSubmit = async(data: UserRegister) => {
     // Handle form submission (send data to server)
-    console.log('Form data:', data);
+    try {
+      await registerUser(data.username, data.password);
+      console.log("Registration successful.");
+      navigate('/login');
+    } catch {
+      console.log("Unsuccessful.");
+    }
   };
 
   return (
@@ -67,14 +76,20 @@ function RegistrationForm() {
 }
 
 function Login() {
+  const navigate = useNavigate();
   const { register, handleSubmit, formState: { errors } } = useForm<UserLogin>();
 
   const onSubmit = async (data: UserLogin) => {
     // Handle login logic with the submitted data (username and password)
-    // This example just logs the data to the console for demonstration.
-    console.log('Login data:', data);
+      try {
+      const response = await loginUser(data.username, data.password);
+      console.log("Login successful");
+      navigate('/'); // Redirect to home page
+    } catch (err) {
+      console.log('Invalid username or password');
+    }
   };
-  // Implement your login form logic here (username, password fields, submit button)
+
   return (
 
     <form onSubmit={handleSubmit(onSubmit)}>
