@@ -3,18 +3,23 @@ import { Button, TextField, FormControl, Typography, Grid, Link } from '@mui/mat
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
+import {loginUser, registerTransformToServerData, registerUser} from "../services/ApiService";
+import {useNavigate} from "react-router-dom";
 
-interface UserLogin {
+export interface UserLogin {
   username: string;
   password: string;
 }
-interface UserRegister extends UserLogin {
+export interface UserRegister extends UserLogin {
   confirmPassword: string;
+  email: string;
 }
 
 function RegistrationForm() {
+    const navigate = useNavigate();
   const validationSchema = yup.object({
     username: yup.string().required('Username is required'),
+      email: yup.string().email('Invalid email address').required('Email is required'),
     password: yup.string().required('Password is required').min(8, 'Password must be at least 8 characters'),
     confirmPassword: yup.string().oneOf([yup.ref('password')], 'Passwords must match').required('Confirm password is required'),
   });
@@ -22,57 +27,74 @@ function RegistrationForm() {
     resolver: yupResolver(validationSchema),
   });
 
-  const onSubmit = (data: UserRegister) => {
-    // Handle form submission (send data to server)
+  const onSubmit = async (data: UserRegister) => {
+      try{
+          await registerUser(registerTransformToServerData(data))
+          navigate('/login')
+      }
+      catch (e){}
     console.log('Form data:', data);
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <FormControl fullWidth margin="normal">
-        <TextField
-          {...register('username', { required: true })}
-          id="username"
-          label="Username"
-          error={!!errors.username}
-          helperText={errors.username?.message?.toString()}
-        />
-      </FormControl>
-      <FormControl fullWidth margin="normal">
-        <TextField
-          {...register('password', { required: true })}
-          id="password"
-          label="Password"
-          type="password"
-          error={!!errors.password}
-          helperText={errors.password?.message?.toString()}
-        />
-      </FormControl>
-      <FormControl fullWidth margin="normal">
-        <TextField
-          {...register('confirmPassword', { required: true })}
-          id="confirmPassword"
-          label="Confirm Password"
-          type="password"
-          error={!!errors.confirmPassword}
-          helperText={errors.confirmPassword?.message?.toString()}
-        />
-      </FormControl>
-      <Button type="submit" sx={{ marginBottom: '10px' }} variant="contained">
-        Register
-      </Button>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <FormControl fullWidth margin="normal">
+          <TextField
+              {...register('username', { required: true })}
+              id="username"
+              label="Username"
+              error={!!errors.username}
+              helperText={errors.username?.message?.toString()}
+          />
+        </FormControl>
+          <FormControl fullWidth margin="normal">
+              <TextField
+                  {...register('email', { required: true })}
+                  id="email"
+                  label="Email"
+                  error={!!errors.email}
+                  helperText={errors.email?.message?.toString()}
+              />
+          </FormControl>
+        <FormControl fullWidth margin="normal">
+          <TextField
+              {...register('password', { required: true })}
+              id="password"
+              label="Password"
+              type="password"
+              error={!!errors.password}
+              helperText={errors.password?.message?.toString()}
+          />
+        </FormControl>
+        <FormControl fullWidth margin="normal">
+          <TextField
+              {...register('confirmPassword', { required: true })}
+              id="confirmPassword"
+              label="Confirm Password"
+              type="password"
+              error={!!errors.confirmPassword}
+              helperText={errors.confirmPassword?.message?.toString()}
+          />
+        </FormControl>
+        <Button type="submit" sx={{ marginBottom: '10px' }} variant="contained">
+          Register
+        </Button>
 
-    </form>
+      </form>
   );
 }
 
 function Login() {
   const { register, handleSubmit, formState: { errors } } = useForm<UserLogin>();
-
+    const navigate = useNavigate();
   const onSubmit = async (data: UserLogin) => {
-    // Handle login logic with the submitted data (username and password)
-    // This example just logs the data to the console for demonstration.
-    console.log('Login data:', data);
+      try {
+          await loginUser(data)
+          navigate('/')
+      }
+      catch (e){
+          console.log(e)
+      }
   };
   // Implement your login form logic here (username, password fields, submit button)
   return (
