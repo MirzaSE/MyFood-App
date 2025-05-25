@@ -24,13 +24,23 @@ const api = axios.create({
 };
 
   export const registerUser = async (username: string, password: string) => {
-  const response = await api.post('/authenticate/register', {
-    username,
-    password
-  });
-  return response.data;
+  try {
+    const response = await api.post('/authenticate/register', {
+      username,
+      password
+    });
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      // Handle specific error messages from server
+      const serverError = error.response.data?.Errors?.[0] || 
+                         error.response.data?.Message || 
+                         'Registration failed';
+      throw new Error(serverError);
+    }
+    throw new Error('Network error during registration');
+  }
 };
-
 export const storeToken = (token: string) => {
   localStorage.setItem('authToken', token);
   api.defaults.headers.common['Authorization'] = `Bearer ${token}`;

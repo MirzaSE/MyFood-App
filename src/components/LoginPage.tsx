@@ -26,15 +26,15 @@ function RegistrationForm() {
   });
 
   const onSubmit = async(data: UserRegister) => {
-    // Handle form submission (send data to server)
-    try {
-      await registerUser(data.username, data.password);
-      console.log("Registration successful.");
-      navigate('/login');
-    } catch {
-      console.log("Unsuccessful.");
-    }
-  };
+  try {
+    await registerUser(data.username, data.password);
+    console.log("Registration successful.");
+    navigate('/login');
+  } catch (error: any) {
+    console.error("Registration failed:", error.message);
+    alert(`Registration failed: ${error.message}`);
+  }
+};
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
