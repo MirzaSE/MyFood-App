@@ -1,108 +1,183 @@
 import React, { useState } from "react";
-import { Button, TextField, Grid, Typography, Link } from "@mui/material";
+import {
+  Button,
+  TextField,
+  FormControl,
+  Typography,
+  Grid,
+  Link,
+} from "@mui/material";
 import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 import { loginUser, registerUser } from "../services/ApiService";
 import { useNavigate } from "react-router-dom";
 
-interface LoginFormData {
-  email: string;
+interface UserLogin {
+  username: string;
   password: string;
 }
-
-interface RegisterFormData extends LoginFormData {
-  fullName: string;
+interface UserRegister extends UserLogin {
+  confirmPassword: string;
 }
 
-export default function LoginPage() {
-  const [isLogin, setIsLogin] = useState(true);
+function RegistrationForm() {
+  const navigate = useNavigate();
+  const validationSchema = yup.object({
+    username: yup.string().required("Username is required"),
+    password: yup
+      .string()
+      .required("Password is required")
+      .min(8, "Password must be at least 8 characters"),
+    confirmPassword: yup
+      .string()
+      .oneOf([yup.ref("password")], "Passwords must match")
+      .required("Confirm password is required"),
+  });
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<RegisterFormData>();
-  const navigate = useNavigate();
+  } = useForm<UserRegister>({
+    resolver: yupResolver(validationSchema),
+  });
 
-  const onSubmit = async (data: RegisterFormData) => {
+  const onSubmit = async (data: UserRegister) => {
     try {
-      if (isLogin) {
-        await loginUser({ email: data.email, password: data.password });
-        navigate("/");
-      } else {
-        await registerUser(data);
-        setIsLogin(true);
-        alert("Registration successful! Please login.");
-      }
-    } catch (error) {
-      alert(
-        isLogin
-          ? "Login failed. Please check your credentials."
-          : "Registration failed. The email might be already registered."
-      );
-      console.error(error);
+      await registerUser(data.username, data.password);
+      console.log("Registration successful.");
+      navigate("/login");
+    } catch (error: any) {
+      console.error("Registration failed:", error.message);
+      alert(`Registration failed: ${error.message}`);
     }
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <FormControl fullWidth margin="normal">
+        <TextField
+          {...register("username", { required: true })}
+          id="username"
+          label="Username"
+          error={!!errors.username}
+          helperText={errors.username?.message?.toString()}
+        />
+      </FormControl>
+      <FormControl fullWidth margin="normal">
+        <TextField
+          {...register("password", { required: true })}
+          id="password"
+          label="Password"
+          type="password"
+          error={!!errors.password}
+          helperText={errors.password?.message?.toString()}
+        />
+      </FormControl>
+      <FormControl fullWidth margin="normal">
+        <TextField
+          {...register("confirmPassword", { required: true })}
+          id="confirmPassword"
+          label="Confirm Password"
+          type="password"
+          error={!!errors.confirmPassword}
+          helperText={errors.confirmPassword?.message?.toString()}
+        />
+      </FormControl>
+      <Button type="submit" sx={{ marginBottom: "10px" }} variant="contained">
+        Register
+      </Button>
+    </form>
+  );
+}
+
+function Login() {
+  const navigate = useNavigate();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<UserLogin>();
+
+  const onSubmit = async (data: UserLogin) => {
+    // Handle login logic with the submitted data (username and password)
+    try {
+      const response = await loginUser(data.username, data.password);
+      console.log("Login successful");
+      navigate("/"); // Redirect to home page
+    } catch (err) {
+      console.log("Invalid username or password");
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <FormControl fullWidth margin="normal">
+        <TextField
+          {...register("username", { required: true })}
+          id="username"
+          label="Username"
+          className="login-input"
+          error={!!errors.username}
+          helperText={errors.username?.message?.toString() || ""}
+        />
+      </FormControl>
+      <FormControl fullWidth margin="normal">
+        <TextField
+          {...register("password", { required: true })}
+          id="password"
+          label="Password"
+          className="login-input"
+          type="password"
+          error={!!errors.password}
+          helperText={errors.password?.message?.toString() || ""}
+        />
+      </FormControl>
+      <Button type="submit" sx={{ marginBottom: "10px" }} variant="contained">
+        Login
+      </Button>
+    </form>
+  );
+}
+function AuthPage() {
+  const [activeView, setActiveView] = useState("login"); // Initial view state
+
+  const handleViewChange = (view: string) => {
+    setActiveView(view);
+
+    if ("login") console.log(view);
   };
 
   return (
     <Grid
       container
-      justifyContent="center"
+      spacing={0}
+      direction="column"
       alignItems="center"
-      style={{ minHeight: "100vh" }}
+      justifyContent="center"
+      sx={{ minHeight: "100vh" }}
     >
-      <Grid item xs={10} sm={6} md={4}>
-        <Typography variant="h4" align="center" gutterBottom>
-          {isLogin ? "Login" : "Register"}
+      <Grid item xs={3}>
+        <Typography variant="h5" color="primary" align="center">
+          Food App
         </Typography>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          {!isLogin && (
-            <TextField
-              {...register("fullName", { required: !isLogin })}
-              label="Full Name"
-              fullWidth
-              margin="normal"
-              required={!isLogin}
-              error={!!errors.fullName}
-              helperText={errors.fullName && "Full name is required"}
-            />
-          )}
-          <TextField
-            {...register("email", { required: true })}
-            label="Email"
-            type="email"
-            fullWidth
-            margin="normal"
-            required
-            error={!!errors.email}
-            helperText={errors.email && "Email is required"}
-          />
-          <TextField
-            {...register("password", { required: true })}
-            label="Password"
-            type="password"
-            fullWidth
-            margin="normal"
-            required
-            error={!!errors.password}
-            helperText={errors.password && "Password is required"}
-          />
-          <Button
-            type="submit"
-            variant="contained"
-            fullWidth
-            style={{ marginTop: 16 }}
-          >
-            {isLogin ? "Login" : "Register"}
-          </Button>
-        </form>
+        {activeView === "login" ? <Login /> : <RegistrationForm />}{" "}
+        {/* Conditional rendering */}
+      </Grid>
+      <Grid item>
         <Link
-          component="button"
           variant="body2"
-          onClick={() => setIsLogin(!isLogin)}
-          style={{ display: "block", textAlign: "center", marginTop: 16 }}
+          onClick={() =>
+            handleViewChange(activeView === "login" ? "register" : "login")
+          }
         >
-          {isLogin ? "Need to register?" : "Already have an account?"}
+          {activeView === "login"
+            ? "Still not using Food App: REGISTER"
+            : "I have an account: LOG IN"}
         </Link>
       </Grid>
     </Grid>
   );
 }
+
+export default AuthPage;
